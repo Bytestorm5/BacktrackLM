@@ -1,6 +1,7 @@
 import os
+import random
 from pathlib import Path
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from transformers import (
     GPT2TokenizerFast,
     GPT2LMHeadModel,
@@ -23,14 +24,27 @@ CURSOR_TOKENS = {
 
 def main():
     dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
-    tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
+    tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
     special_tokens = [BACKSPACE_TOKEN] + list(CURSOR_TOKENS.keys())
     to_add = [t for t in special_tokens if t not in tokenizer.get_vocab()]
     if to_add:
-        tokenizer.add_special_tokens({'additional_special_tokens': to_add})
+        tokenizer.add_special_tokens({"additional_special_tokens": to_add})
     tokenizer.pad_token = tokenizer.eos_token
-    model = GPT2LMHeadModel.from_pretrained('gpt2')
+    model = GPT2LMHeadModel.from_pretrained("gpt2")
     model.resize_token_embeddings(len(tokenizer))
+
+    # Build a mixed dataset of normal and correction samples
+    raw_texts = [t.strip() for t in dataset["text"] if t.strip()]
+    augmented = []
+    for text in raw_texts:
+        if random.random() < 0.75:
+            augmented.append(text)
+        else:
+            wrong = random.choice(raw_texts)
+            wrong_tokens = tokenizer.encode(wrong)
+            edits = " ".join([BACKSPACE_TOKEN] * len(wrong_tokens))
+            augmented.append(f"{wrong} {edits} {text}")
+    dataset = Dataset.from_dict({"text": augmented})
 
     def tokenize(example):
         return tokenizer(example['text'], truncation=True)

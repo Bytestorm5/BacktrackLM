@@ -11,7 +11,7 @@ pip install torch==2.2.2+cpu -f https://download.pytorch.org/whl/torch_stable.ht
 pip install transformers datasets
 ```
 
-Run training (the script downloads the `wikitext-2-raw-v1` dataset from HuggingFace):
+Run training (the script downloads the `wikitext-2-raw-v1` dataset from HuggingFace and automatically creates a mix of normal and correction samples):
 
 ```bash
 python src/train.py
@@ -35,6 +35,6 @@ After generation finishes the script prints both the raw tokens and the final ed
 python src/inference.py
 ```
 
-## Dataset augmentation idea
+## Dataset composition
 
-After training the base model, you can create new training pairs where a prompt is followed by a partially incorrect answer that the model must fix using `<|backspace|>` tokens. This encourages the model to edit its own outputs during generation.
+During preprocessing, 75% of the training examples are kept as-is while the remaining 25% are turned into correction tasks. For a correction task a random line from the dataset is treated as an incorrect answer and then deleted with enough `<|backspace|>` tokens before inserting the correct text. This gives the model experience removing wrong output and replacing it with the right text.
