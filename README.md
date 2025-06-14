@@ -11,7 +11,7 @@ pip install torch==2.2.2+cpu -f https://download.pytorch.org/whl/torch_stable.ht
 pip install transformers datasets
 ```
 
-Run training (this uses the tiny example data in `data/train.txt`):
+Run training (the script downloads the `wikitext-2-raw-v1` dataset from HuggingFace):
 
 ```bash
 python src/train.py

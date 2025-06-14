@@ -1,7 +1,13 @@
 import os
 from pathlib import Path
 from datasets import load_dataset
-from transformers import GPT2TokenizerFast, GPT2LMHeadModel, Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from transformers import (
+    GPT2TokenizerFast,
+    GPT2LMHeadModel,
+    Trainer,
+    TrainingArguments,
+    DataCollatorForLanguageModeling,
+)
 
 BACKSPACE_TOKEN = "<|backspace|>"
 CURSOR_TOKENS = {
@@ -15,18 +21,8 @@ CURSOR_TOKENS = {
     "<|cursor_right_1000|>": 1000,
 }
 
-def load_data(file_path):
-    data = []
-    with open(file_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                data.append({'text': line})
-    return {'train': data}
-
-
 def main():
-    data = load_data('data/train.txt')
+    dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
     tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
     special_tokens = [BACKSPACE_TOKEN] + list(CURSOR_TOKENS.keys())
     to_add = [t for t in special_tokens if t not in tokenizer.get_vocab()]
@@ -39,10 +35,7 @@ def main():
     def tokenize(example):
         return tokenizer(example['text'], truncation=True)
 
-    # Convert to Dataset object
-    from datasets import Dataset
-    dataset = Dataset.from_list(data['train'])
-    dataset = dataset.map(tokenize, batched=False)
+    dataset = dataset.map(tokenize, batched=True)
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 

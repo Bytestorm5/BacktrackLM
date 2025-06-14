@@ -1,3 +1,0 @@
-The cat sat on the mat.
-The color is red <|backspace|>blue.
-I like to eat appl <|backspace|>apples.
